@@ -31,13 +31,21 @@ export const RATE_LIMITS = {
   // Un docente no crea más de unas pocas salas seguidas.
   createGame: { limit: 10, windowSeconds: 60 },
   /**
-   * Entradas a una sala: tope ALTO a propósito.
+   * Entradas a una sala.
    *
-   * En un centro educativo toda la clase sale por la misma IP pública (NAT),
-   * así que un límite bajo por IP dejaría fuera a media clase. Con 20/min, un
-   * grupo de 30 no podía entrar.
+   * El tope tiene que ser MAYOR que la sala más grande que vende cualquier
+   * plan, con margen. Si no, el propio producto se contradice: medido con la
+   * prueba de carga, con 150/min un grupo de 200 (que es lo que promete el
+   * plan Pro) se quedaba en 150 y cincuenta alumnos no podían entrar.
+   *
+   * El plan Centro llega a 300, así que 500 deja margen para reintentos y para
+   * dos aulas entrando a la vez desde el mismo NAT.
+   *
+   * Lo que de verdad frena el abuso no es este límite, sino el de entradas
+   * FALLIDAS: probar códigos al azar produce fallos, y entrar en una sala real
+   * no.
    */
-  joinGame: { limit: 150, windowSeconds: 60 },
+  joinGame: { limit: 500, windowSeconds: 60 },
   /**
    * Entradas FALLIDAS: tope bajo.
    *

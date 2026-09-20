@@ -55,6 +55,9 @@ export async function GET() {
     status: healthy ? ("ok" as const) : ("error" as const),
     backend: activeBackend(),
     uptimeSec: Math.round(process.uptime()),
+    // Memoria del proceso: sirve para detectar fugas bajo carga y para
+    // dimensionar el VPS sin adivinar.
+    memoryMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
     checks: { redis, postgres },
     tookMs: Date.now() - startedAt,
   };

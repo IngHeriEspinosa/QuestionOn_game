@@ -71,3 +71,17 @@ describe("limitsFor", () => {
     expect(limitsFor("pro")).toEqual(PLANS.pro.limits);
   });
 });
+
+describe("coherencia con los limites de peticiones", () => {
+  it("ningun plan vende salas mas grandes que el tope de entradas por minuto", async () => {
+    // El producto no puede prometer 200 jugadores y tener un limite de
+    // entradas de 150: cincuenta alumnos se quedarian fuera. Lo detecto la
+    // prueba de carga, y este test impide que vuelva a pasar al tocar
+    // cualquiera de los dos numeros.
+    const { RATE_LIMITS } = await import("../rateLimit");
+    const salaMasGrande = Math.max(
+      ...Object.values(PLANS).map((p) => p.limits.maxPlayersPerGame),
+    );
+    expect(RATE_LIMITS.joinGame.limit).toBeGreaterThan(salaMasGrande);
+  });
+});
