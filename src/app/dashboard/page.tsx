@@ -25,6 +25,12 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/dashboard/informes"
+            className="rounded-xl border border-slate-600 px-4 py-2 text-slate-200 transition hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+          >
+            Informes
+          </Link>
+          <Link
             href="/"
             className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-900 transition hover:bg-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
           >

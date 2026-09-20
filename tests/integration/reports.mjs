@@ -11,10 +11,12 @@
  * Uso: BASE_URL=... SERVER_LOG=... node tests/integration/reports.mjs
  */
 
+import { createHmac, randomUUID } from "crypto";
 import { readFileSync } from "fs";
 
 const B = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 const LOG = process.env.SERVER_LOG;
+const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 if (!LOG) {
   console.error("Falta SERVER_LOG");
@@ -176,6 +178,65 @@ const q2 = report.questions.find((q) => q.questionIndex === 1);
 check("la pregunta 1 la acertaron 2 de 3", [q1.correctCount, q1.answeredCount], [2, 3]);
 check("la pregunta 2 la acerto 1 de 2", [q2.correctCount, q2.answeredCount], [1, 2]);
 check("se conserva el enunciado de la pregunta", q1.prompt, "¿Planeta rojo?");
+
+// --- Exportacion a CSV: funcion de pago ------------------------------------
+const exportFree = await fetch(`${B}/api/reports/${session.id}/export`, {
+  headers: { cookie },
+});
+check("en plan gratuito la exportacion se bloquea con 402", exportFree.status, 402);
+
+if (SECRET) {
+  // Subir a Pro con un webhook firmado y comprobar que se desbloquea.
+  const me = await j(await fetch(`${B}/api/auth/me`, { headers: { cookie } }));
+  const event = JSON.stringify({
+    id: `evt_${randomUUID()}`,
+    object: "event",
+    type: "customer.subscription.updated",
+    data: {
+      object: {
+        id: `sub_${randomUUID().slice(0, 8)}`,
+        object: "subscription",
+        status: "active",
+        customer: `cus_${randomUUID().slice(0, 8)}`,
+        cancel_at_period_end: false,
+        current_period_end: Math.floor(Date.now() / 1000) + 2592000,
+        trial_end: null,
+        items: { data: [{ price: { id: "price_x" } }] },
+        metadata: { userId: me.user.id, orgId: "", plan: "pro" },
+      },
+    },
+  });
+  const ts = Math.floor(Date.now() / 1000);
+  const sig = `t=${ts},v1=${createHmac("sha256", SECRET).update(`${ts}.${event}`).digest("hex")}`;
+  await fetch(`${B}/api/webhooks/stripe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "stripe-signature": sig },
+    body: event,
+  });
+
+  const exportPro = await fetch(`${B}/api/reports/${session.id}/export`, {
+    headers: { cookie },
+  });
+  check("con Pro la exportacion funciona", exportPro.status, 200);
+  check(
+    "se sirve como descarga",
+    (exportPro.headers.get("content-disposition") ?? "").includes("attachment"),
+    true,
+  );
+
+  // Se comprueban los BYTES, no el texto: fetch elimina el BOM al decodificar,
+  // asi que .text() nunca lo mostraria. Lo que importa es lo que recibe Excel.
+  const bytes = new Uint8Array(await exportPro.clone().arrayBuffer());
+  check(
+    "el CSV empieza con BOM UTF-8, para que Excel lea las tildes",
+    [bytes[0], bytes[1], bytes[2]],
+    [0xef, 0xbb, 0xbf],
+  );
+  const csv = await exportPro.text();
+  check("usa punto y coma como separador", csv.includes("Puesto;Nombre"), true);
+  check("contiene a los tres alumnos", ["Ana", "Luis", "Eva"].every((n) => csv.includes(n)), true);
+  check("contiene el enunciado de la pregunta", csv.includes("¿Planeta rojo?"), true);
+}
 
 // --- Aislamiento entre cuentas ---------------------------------------------
 const otro = await signIn();
