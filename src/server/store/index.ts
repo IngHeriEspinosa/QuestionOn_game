@@ -45,5 +45,16 @@ export function getStore(): GameStoreBackend {
   return (globalForStore.__questionon_store ??= createStore());
 }
 
+/**
+ * Store concreto de Redis.
+ *
+ * El archivador necesita operaciones que no estan en la interfaz comun
+ * (volcar una partida entera, poner TTL tras archivar) y que no tienen sentido
+ * en ningun otro backend.
+ */
+export function getRedisStore(): RedisGameStore {
+  return getStore() as RedisGameStore;
+}
+
 /** Backend activo. Se mantiene para el health check. */
 export const activeBackend = () => "redis";

@@ -61,7 +61,7 @@ export const ADVANCE_PHASE_LUA = `-- Avanza la fase de una partida comprobando l
 -- 'stale' y no hace nada. Es más simple y más barato que un lock distribuido,
 -- que además necesitaría fencing tokens para ser correcto.
 --
--- KEYS: 1=meta  2=games:deadlines
+-- KEYS: 1=meta  2=games:deadlines  3=archive:jobs
 -- ARGV: 1=expectedVersion  2=gameId  3=status  4=qIndex  5=revealed
 --       6=questionDeadline("" si no hay)  7=reviewDeadline("")  8=finishedAt("")
 -- Devuelve: {1, nuevaVersion} si se aplica, {0, 'stale'} si otro se adelantó
@@ -91,6 +91,14 @@ if ARGV[3] == 'active' and nextDeadline > 0 then
   redis.call('ZADD', KEYS[2], nextDeadline, ARGV[2])
 else
   redis.call('ZREM', KEYS[2], ARGV[2])
+end
+
+-- Terminar la partida y encolarla para archivar ocurren en la MISMA operacion
+-- atomica. Con dos llamadas desde Node existiria una ventana en la que una
+-- partida acaba sin quedar encolada: se perderian sus resultados y el docente
+-- se quedaria sin el informe de esa clase, sin que nadie se enterase.
+if ARGV[3] == 'finished' then
+  redis.call('XADD', KEYS[3], '*', 'gameId', ARGV[2], 'finishedAt', ARGV[8])
 end
 
 return {1, tostring(newVersion)}

@@ -5,6 +5,8 @@ import { logger } from "../src/lib/logger";
 import { closeRedis } from "../src/lib/redis";
 import { closeDb } from "../src/server/db";
 import { attachWsGateway } from "./wsGateway";
+import { getRedisStore } from "../src/server/store";
+import { startArchiveWorker } from "../src/server/reports/worker";
 
 /**
  * Servidor HTTP propio: Next.js para las paginas y las rutas de API, mas un
@@ -41,6 +43,10 @@ async function main() {
 
   const gateway = attachWsGateway(server, upgradeHandler);
 
+  // El archivador vive en el servidor propio, no en los route handlers: asi
+  // hay UN consumidor por proceso y no uno por peticion.
+  const archiver = startArchiveWorker(getRedisStore());
+
   server.listen(port, () => {
     logger.info({ port, dev }, "servidor listo");
     // Se conserva en stdout porque es lo que la gente busca al arrancar.
@@ -56,6 +62,7 @@ async function main() {
     logger.info({ signal, sockets: gateway.size() }, "cerrando");
 
     gateway.closeAll();
+    archiver.stop();
 
     const force = setTimeout(() => {
       logger.error("cierre forzado tras el timeout");

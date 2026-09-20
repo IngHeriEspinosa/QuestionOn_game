@@ -29,6 +29,11 @@ export const gameKeys = (gameId: string) => {
 /** Reserva del código de sala. Se crea con SET NX, que da unicidad real. */
 export const codeKey = (code: string) => `code:${code}`;
 
+/** Cola de partidas terminadas pendientes de archivar en Postgres. */
+export const ARCHIVE_STREAM = "archive:jobs";
+/** Grupo de consumidores del archivado. */
+export const ARCHIVE_GROUP = "archivers";
+
 /** ZSET gameId -> próximo deadline. Es el planificador global de fases. */
 export const DEADLINES_KEY = "games:deadlines";
 

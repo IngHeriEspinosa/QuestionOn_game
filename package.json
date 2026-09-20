@@ -22,7 +22,8 @@
     "test:quizzes": "node tests/integration/quiz-flow.mjs",
     "test:authz": "node tests/integration/authorization.mjs",
     "test:billing": "node tests/integration/billing-webhook.mjs",
-    "test:plans": "node tests/integration/plan-limits.mjs"
+    "test:plans": "node tests/integration/plan-limits.mjs",
+    "test:reports": "node tests/integration/reports.mjs"
   },
   "dependencies": {
     "dotenv": "^17.4.0",

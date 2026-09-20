@@ -14,7 +14,7 @@ import {
 import { applyChoiceShuffle, sanitizeQuestions } from "../domain/questions";
 import type { Question } from "../domain/types";
 import { ADVANCE_PHASE_LUA, SUBMIT_ANSWER_LUA } from "./luaScripts";
-import { DEADLINES_KEY, GAME_TTL_MS, codeKey, gameKeys } from "./keys";
+import { ARCHIVE_STREAM, DEADLINES_KEY, GAME_TTL_MS, codeKey, gameKeys } from "./keys";
 import type { CreateGameInput, GameStoreBackend, Viewer } from "./types";
 
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -34,6 +34,36 @@ const FLUSH_WINDOW_MS = 50;
 type Subscriber = {
   callback: (state: PublicState | null) => void;
   viewer?: Viewer;
+};
+
+export type ArchivedPlayer = {
+  playerKey: string;
+  displayName: string;
+  joinedAt: Date;
+  finalScore: number;
+  finalRank: number;
+  streak: number;
+};
+
+export type ArchivedAnswer = {
+  playerKey: string;
+  questionIndex: number;
+  questionId: string | null;
+  selected: number[];
+  isCorrect: boolean;
+  answeredAt: Date;
+};
+
+/** Todo lo necesario para archivar una partida terminada. */
+export type GameArchive = {
+  gameId: string;
+  title: string;
+  hostUserId: string | null;
+  finishedAt: Date;
+  questionTimeMs: number;
+  questions: Question[];
+  players: ArchivedPlayer[];
+  answers: ArchivedAnswer[];
 };
 
 type StoredAnswer = {
@@ -78,6 +108,7 @@ type RedisWithScripts = Redis & {
   qonAdvancePhase(
     metaKey: string,
     deadlinesKey: string,
+    archiveStreamKey: string,
     expectedVersion: string,
     gameId: string,
     status: string,
@@ -147,7 +178,7 @@ export class RedisGameStore implements GameStoreBackend {
       lua: SUBMIT_ANSWER_LUA,
     });
     redis.defineCommand("qonAdvancePhase", {
-      numberOfKeys: 2,
+      numberOfKeys: 3,
       lua: ADVANCE_PHASE_LUA,
     });
     this.scriptsDefined = true;
@@ -225,6 +256,7 @@ export class RedisGameStore implements GameStoreBackend {
     const [ok] = await redis.qonAdvancePhase(
       keys.meta,
       DEADLINES_KEY,
+      ARCHIVE_STREAM,
       String(expectedVersion),
       gameId,
       next.status,
@@ -749,6 +781,92 @@ export class RedisGameStore implements GameStoreBackend {
     const meta = await this.readMeta(redis, gameId);
     if (!meta) return null;
     return { hostUserId: meta.hostUserId };
+  }
+
+  /**
+   * Vuelca TODO lo de una partida para archivarla.
+   *
+   * Es la unica lectura que recorre todas las preguntas: se hace una sola vez,
+   * al terminar, y fuera del camino critico del juego.
+   */
+  async dumpForArchive(gameId: string): Promise<GameArchive | null> {
+    const redis = await this.client();
+    const meta = await this.readMeta(redis, gameId);
+    if (!meta) return null;
+
+    const questions = await this.readQuiz(redis, gameId);
+    const keys = gameKeys(gameId);
+
+    const [playersRaw, scoresRaw, streaksRaw] = await Promise.all([
+      redis.hgetall(keys.players),
+      redis.zrange(keys.scores, 0, -1, "WITHSCORES"),
+      redis.hgetall(keys.streaks),
+    ]);
+
+    const scores = new Map<string, number>();
+    for (let i = 0; i < scoresRaw.length; i += 2) {
+      scores.set(scoresRaw[i], Number(scoresRaw[i + 1]));
+    }
+
+    // Las respuestas viven en una clave por pregunta.
+    const answersByQuestion = await Promise.all(
+      questions.map((_, index) => redis.hgetall(keys.answers(index))),
+    );
+
+    const players = Object.entries(playersRaw)
+      .map(([id, raw]) => {
+        const parsed = JSON.parse(raw) as { n: string; j: number };
+        return {
+          playerKey: id,
+          displayName: parsed.n,
+          joinedAt: new Date(parsed.j),
+          finalScore: scores.get(id) ?? 0,
+          streak: Number(streaksRaw[id] ?? 0),
+        };
+      })
+      .sort((a, b) => b.finalScore - a.finalScore || a.joinedAt.getTime() - b.joinedAt.getTime())
+      .map((p, index) => ({ ...p, finalRank: index + 1 }));
+
+    const answers: ArchivedAnswer[] = [];
+    answersByQuestion.forEach((byPlayer, questionIndex) => {
+      const question = questions[questionIndex];
+      for (const [playerKey, raw] of Object.entries(byPlayer)) {
+        const parsed = JSON.parse(raw) as StoredAnswer;
+        answers.push({
+          playerKey,
+          questionIndex,
+          questionId: question?.id ?? null,
+          selected: parsed.selected,
+          isCorrect: parsed.isCorrect,
+          answeredAt: new Date(parsed.at),
+        });
+      }
+    });
+
+    return {
+      gameId,
+      title: meta.title,
+      hostUserId: meta.hostUserId,
+      finishedAt: meta.finishedAt ? new Date(meta.finishedAt) : new Date(),
+      questionTimeMs: meta.questionTimeMs,
+      questions,
+      players,
+      answers,
+    };
+  }
+
+  /** Pone TTL corto a las claves de una partida ya archivada. */
+  async expireArchivedGame(gameId: string, ttlMs: number) {
+    const redis = await this.client();
+    const keys = gameKeys(gameId);
+    const quiz = await this.readQuiz(redis, gameId);
+
+    const pipeline = redis.multi();
+    for (const key of [keys.meta, keys.quiz, keys.players, keys.scores, keys.streaks]) {
+      pipeline.pexpire(key, ttlMs);
+    }
+    quiz.forEach((_, index) => pipeline.pexpire(keys.answers(index), ttlMs));
+    await pipeline.exec();
   }
 
   // ----------------------------------------------- planificador (Fase 1.4)

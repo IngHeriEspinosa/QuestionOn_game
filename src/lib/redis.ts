@@ -82,6 +82,25 @@ export function getRedisSubscriber() {
   return redisSubscriber;
 }
 
+/**
+ * Crea una conexión NUEVA e independiente.
+ *
+ * Obligatoria para quien use comandos bloqueantes (`XREADGROUP ... BLOCK`,
+ * `BLPOP`, ...): en ioredis, un comando bloqueante ocupa la conexión entera y
+ * deja en espera a todo lo demás que la comparta.
+ *
+ * Se descubrió por las malas: el worker de archivado bloqueaba 5 segundos en
+ * el cliente compartido, y eso hacía que una petición de avanzar de pregunta
+ * tardara 25 segundos. Con una clase esperando, la partida era inusable.
+ */
+export function createRedisConnection(label: string) {
+  const url = process.env.REDIS_URL?.trim();
+  if (!url) return null;
+  const client = new Redis(url, baseOptions());
+  attachLogging(client, label as "client" | "subscriber");
+  return client;
+}
+
 /** Espera a que el cliente llegue a `ready`, o se rinde pasado el timeout. */
 function waitForReady(client: Redis, timeoutMs: number) {
   return new Promise<boolean>((resolve) => {
