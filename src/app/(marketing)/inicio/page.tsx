@@ -3,54 +3,38 @@ import type { Metadata } from "next";
 import { PLANS } from "@/server/billing/plans";
 import { getSession } from "@/server/auth/dal";
 import { appUrlForMetadata } from "@/lib/appUrl";
+import { getTranslations } from "@/i18n";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  // Sin "QuestionON": la plantilla del layout ya lo anade y saldria dos veces.
-  title: "Cuestionarios en vivo para el aula",
-  description:
-    "Crea cuestionarios y juégalos en directo con tu clase. El alumnado entra con un código, sin crear cuenta ni dar datos personales. Empieza gratis.",
-  keywords: [
-    "cuestionarios en el aula",
-    "trivia educativa",
-    "kahoot alternativa",
-    "gamificación en clase",
-    "evaluación formativa",
-  ],
-  alternates: { canonical: "/inicio" },
-  openGraph: {
-    type: "website",
-    locale: "es_ES",
-    siteName: "QuestionON",
-    title: "Cuestionarios en vivo para el aula",
-    description:
-      "El alumnado entra con un código y un apodo, sin crear cuenta ni dar datos personales.",
-  },
-};
+/**
+ * Metadatos dependientes del idioma.
+ *
+ * `generateMetadata` y no un `metadata` estatico: el titulo y la descripcion
+ * son las cadenas que mas pesan en un resultado de busqueda, y dejarlas fijas
+ * en espanol anulaba la traduccion justo donde mas se nota.
+ *
+ * LIMITACION CONOCIDA de servir ambos idiomas en la misma URL: un buscador
+ * indexara solo una version por direccion. Se asume a cambio de no romper los
+ * enlaces ya compartidos ni los QR. Si el posicionamiento en ingles llegara a
+ * importar, la salida es publicar la portada tambien bajo /en/inicio.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getTranslations();
 
-const VENTAJAS = [
-  {
-    titulo: "El alumnado no crea cuenta",
-    texto:
-      "Entra con un código de sala y un apodo. Sin correos, sin nombres reales, sin consentimientos que gestionar. Es la diferencia que un centro nota al revisar la privacidad.",
-  },
-  {
-    titulo: "Preparas una vez, reutilizas siempre",
-    texto:
-      "Guarda tus cuestionarios y sácalos el curso que viene. Cinco tipos de pregunta, con peso por pregunta e imágenes.",
-  },
-  {
-    titulo: "Sabes qué repasar mañana",
-    texto:
-      "Al terminar la clase tienes el informe: qué preguntas falló el grupo, ordenadas de peor a mejor, y cómo fue cada alumno.",
-  },
-  {
-    titulo: "Aguanta un aula de verdad",
-    texto:
-      "Probado con 200 jugadores respondiendo a la vez sin perder una sola puntuación. Si alguien recarga la página, vuelve donde estaba.",
-  },
-];
+  return {
+    title: t.portada.titulo,
+    description: t.portada.subtitulo,
+    alternates: { canonical: "/inicio" },
+    openGraph: {
+      type: "website",
+      locale: locale === "en" ? "en_GB" : "es_ES",
+      siteName: "QuestionON",
+      title: t.portada.titulo,
+      description: t.portada.subtitulo,
+    },
+  };
+}
 
 /**
  * Portada pública.
@@ -64,7 +48,7 @@ const VENTAJAS = [
  * producto hace.
  */
 export default async function LandingPage() {
-  const session = await getSession();
+  const [session, { t }] = await Promise.all([getSession(), getTranslations()]);
   const gratis = PLANS.free.limits;
 
   // Datos estructurados: ayudan a que el resultado en buscadores muestre el
@@ -94,12 +78,10 @@ export default async function LandingPage() {
 
       <section className="space-y-6 text-center">
         <h1 className="font-display text-3xl font-semibold text-slate-100 md:text-5xl">
-          Cuestionarios en vivo,
-          <br className="hidden md:block" /> sin que tu alumnado dé un solo dato
+          {t.portada.titulo}
         </h1>
         <p className="mx-auto max-w-2xl text-lg text-slate-300">
-          Prepara las preguntas, proyecta el código y deja que la clase
-          responda desde su móvil. Al terminar sabes exactamente qué repasar.
+          {t.portada.subtitulo}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -107,24 +89,26 @@ export default async function LandingPage() {
             href={session ? "/dashboard" : "/login"}
             className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-900 transition hover:bg-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
           >
-            {session ? "Ir a mi panel" : "Empezar gratis"}
+            {session ? t.portada.irPanel : t.portada.empezar}
           </Link>
           <Link
             href="/"
             className="rounded-xl border border-slate-600 px-6 py-3 font-semibold text-slate-200 transition hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
           >
-            Probar sin cuenta
+            {t.portada.probarSinCuenta}
           </Link>
         </div>
 
         <p className="text-sm text-slate-400">
-          Gratis para siempre hasta {gratis.maxPlayersPerGame} jugadores por
-          sala. Sin tarjeta.
+          {t.portada.gratisHasta.replace(
+            "{jugadores}",
+            String(gratis.maxPlayersPerGame),
+          )}
         </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        {VENTAJAS.map((v) => (
+        {t.portada.ventajas.map((v) => (
           <article
             key={v.titulo}
             className="space-y-2 rounded-2xl border border-slate-700 bg-slate-900/50 p-6"
@@ -139,48 +123,36 @@ export default async function LandingPage() {
 
       <section className="space-y-4 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-6 md:p-8">
         <h2 className="font-display text-xl font-semibold text-slate-100">
-          Cómo funciona una clase
+          {t.portada.comoFunciona}
         </h2>
         <ol className="space-y-3 text-slate-300">
-          <li>
-            <strong className="text-slate-100">1.</strong> Creas el cuestionario
-            o abres uno guardado.
-          </li>
-          <li>
-            <strong className="text-slate-100">2.</strong> Proyectas el código y
-            el QR. El alumnado entra con un apodo.
-          </li>
-          <li>
-            <strong className="text-slate-100">3.</strong> Avanzas pregunta a
-            pregunta. El marcador se actualiza en directo.
-          </li>
-          <li>
-            <strong className="text-slate-100">4.</strong> Al terminar consultas
-            el informe y decides qué repasar.
-          </li>
+          {t.portada.pasos.map((paso, i) => (
+            <li key={paso}>
+              <strong className="text-slate-100">{i + 1}.</strong> {paso}
+            </li>
+          ))}
         </ol>
       </section>
 
       <section className="space-y-4 text-center">
         <h2 className="font-display text-xl font-semibold text-slate-100">
-          Pensado para centros educativos
+          {t.portada.paraCentros}
         </h2>
         <p className="mx-auto max-w-2xl text-slate-300">
-          El alumnado no crea cuenta, así que no hay datos personales de menores
-          que tratar. Lo explicamos sin letra pequeña en{" "}
+          {t.portada.paraCentrosTexto}{" "}
           <Link
             href="/legal/aula"
             className="underline decoration-cyan-400 underline-offset-4"
           >
-            Privacidad en el aula
+            {t.pie.privacidadAula}
           </Link>
-          , y hay acuerdo de tratamiento de datos disponible para el centro.
+          .
         </p>
         <Link
           href="/precios"
           className="inline-block rounded-xl border border-slate-600 px-6 py-3 font-semibold text-slate-200 transition hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
-          Ver precios
+          {t.portada.verPrecios}
         </Link>
       </section>
     </main>

@@ -106,9 +106,19 @@ ${describir(menores)}`);
     expect(tieneIndicador).toBe(true);
   });
 
-  test("la página declara su idioma", async ({ page }) => {
+  test("la página declara el idioma que de verdad sirve", async ({ page }) => {
     // Sin esto, un lector de pantalla lee el español con fonética inglesa.
+    // Se comprueba que coincida con el contenido, no que sea siempre "es":
+    // el sitio se sirve en el idioma del navegador.
     await page.goto("/inicio");
-    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    const lang = await page.locator("html").getAttribute("lang");
+    expect(["es", "en"]).toContain(lang);
+
+    const titulo = await page.getByRole("heading", { level: 1 }).textContent();
+    if (lang === "es") {
+      expect(titulo).toContain("Cuestionarios");
+    } else {
+      expect(titulo).toContain("Live quizzes");
+    }
   });
 });

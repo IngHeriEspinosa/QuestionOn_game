@@ -1,0 +1,105 @@
+{
+  "comun": {
+    "marca": "QuestionON",
+    "entrar": "Entrar",
+    "salir": "Salir",
+    "panel": "Panel",
+    "precios": "Precios",
+    "informes": "Informes",
+    "volver": "Volver",
+    "guardar": "Guardar",
+    "cancelar": "Cancelar",
+    "cargando": "Cargando..."
+  },
+  "pie": {
+    "queEs": "Qué es QuestionON",
+    "precios": "Precios",
+    "privacidadAula": "Privacidad en el aula",
+    "privacidad": "Privacidad",
+    "terminos": "Términos",
+    "cookies": "Cookies",
+    "lema": "El alumnado juega sin cuenta y sin dar datos personales."
+  },
+  "portada": {
+    "titulo": "Cuestionarios en vivo, sin que tu alumnado dé un solo dato",
+    "subtitulo": "Prepara las preguntas, proyecta el código y deja que la clase responda desde su móvil. Al terminar sabes exactamente qué repasar.",
+    "empezar": "Empezar gratis",
+    "irPanel": "Ir a mi panel",
+    "probarSinCuenta": "Probar sin cuenta",
+    "gratisHasta": "Gratis para siempre hasta {jugadores} jugadores por sala. Sin tarjeta.",
+    "comoFunciona": "Cómo funciona una clase",
+    "pasos": [
+      "Creas el cuestionario o abres uno guardado.",
+      "Proyectas el código y el QR. El alumnado entra con un apodo.",
+      "Avanzas pregunta a pregunta. El marcador se actualiza en directo.",
+      "Al terminar consultas el informe y decides qué repasar."
+    ],
+    "paraCentros": "Pensado para centros educativos",
+    "paraCentrosTexto": "El alumnado no crea cuenta, así que no hay datos personales de menores que tratar. Lo explicamos sin letra pequeña en",
+    "verPrecios": "Ver precios",
+    "ventajas": [
+      {
+        "titulo": "El alumnado no crea cuenta",
+        "texto": "Entra con un código de sala y un apodo. Sin correos, sin nombres reales, sin consentimientos que gestionar. Es la diferencia que un centro nota al revisar la privacidad."
+      },
+      {
+        "titulo": "Preparas una vez, reutilizas siempre",
+        "texto": "Guarda tus cuestionarios y sácalos el curso que viene. Cinco tipos de pregunta, con peso por pregunta e imágenes."
+      },
+      {
+        "titulo": "Sabes qué repasar mañana",
+        "texto": "Al terminar la clase tienes el informe: qué preguntas falló el grupo, ordenadas de peor a mejor, y cómo fue cada alumno."
+      },
+      {
+        "titulo": "Aguanta un aula de verdad",
+        "texto": "Probado con 200 jugadores respondiendo a la vez sin perder una sola puntuación. Si alguien recarga la página, vuelve donde estaba."
+      }
+    ]
+  },
+  "acceso": {
+    "titulo": "Entra en QuestionON",
+    "subtitulo": "Te enviamos un enlace de acceso. Sin contraseñas que recordar.",
+    "correo": "Correo electrónico",
+    "enviar": "Enviarme el enlace",
+    "enviando": "Enviando...",
+    "revisaBandeja": "Revisa tu bandeja de entrada.",
+    "soloProfesorado": "Solo el profesorado necesita cuenta. El alumnado entra con un código de sala y un apodo, sin dar ningún dato personal.",
+    "errorEnlaceUsado": "Ese enlace ya no vale. Pide uno nuevo.",
+    "errorSinCodigo": "El enlace no traía el código de acceso."
+  },
+  "precios": {
+    "titulo": "Precios",
+    "subtitulo": "Empieza gratis y paga solo cuando tu aula se te quede pequeña. Catorce días de prueba de Pro, sin tarjeta.",
+    "sinCuentaAlumnado": "El alumnado nunca necesita cuenta: entra con un código y un apodo, sin dar ningún dato personal.",
+    "probar": "Probar 14 días",
+    "porDocente": "por docente, mínimo 5",
+    "jugadoresPorSala": "{n} jugadores por sala",
+    "cuestionariosIlimitados": "Cuestionarios ilimitados",
+    "cuestionariosGuardados": "{n} cuestionarios guardados",
+    "tiposPregunta": "{n} tipos de pregunta",
+    "informesSinCaducidad": "Informes sin caducidad",
+    "informesDias": "Informes de los últimos {n} días",
+    "exportar": "Exportar a CSV y Excel",
+    "subirImagenes": "Subir tus propias imágenes",
+    "branding": "Tu logo y tus colores"
+  },
+  "informes": {
+    "titulo": "Informes",
+    "subtitulo": "Qué preguntas falló el grupo y cómo fue cada alumno.",
+    "sinPartidas": "Todavía no has terminado ninguna partida.",
+    "sinPartidasAyuda": "Los informes aparecen aquí en cuanto una partida llega al final.",
+    "preguntasCostaron": "Preguntas que más costaron",
+    "preguntasCostaronAyuda": "Ordenadas de peor a mejor: las primeras son las que conviene repasar.",
+    "alumnado": "Alumnado",
+    "puesto": "Puesto",
+    "nombre": "Nombre",
+    "aciertos": "Aciertos",
+    "respondidas": "Respondidas",
+    "puntos": "Puntos",
+    "sinRespuestas": "Sin respuestas",
+    "porcentajeAcierto": "{n}% de acierto",
+    "exportarCsv": "Exportar a CSV",
+    "exportarSoloPago": "Disponible en",
+    "planesDePago": "los planes de pago"
+  }
+}

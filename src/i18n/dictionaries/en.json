@@ -1,0 +1,105 @@
+{
+  "comun": {
+    "marca": "QuestionON",
+    "entrar": "Sign in",
+    "salir": "Sign out",
+    "panel": "Dashboard",
+    "precios": "Pricing",
+    "informes": "Reports",
+    "volver": "Back",
+    "guardar": "Save",
+    "cancelar": "Cancel",
+    "cargando": "Loading..."
+  },
+  "pie": {
+    "queEs": "What is QuestionON",
+    "precios": "Pricing",
+    "privacidadAula": "Privacy in the classroom",
+    "privacidad": "Privacy",
+    "terminos": "Terms",
+    "cookies": "Cookies",
+    "lema": "Students play without an account and without giving any personal data."
+  },
+  "portada": {
+    "titulo": "Live quizzes, without your students handing over a single detail",
+    "subtitulo": "Write the questions, project the code and let the class answer from their phones. When you finish, you know exactly what to review.",
+    "empezar": "Start for free",
+    "irPanel": "Go to my dashboard",
+    "probarSinCuenta": "Try without an account",
+    "gratisHasta": "Free forever for up to {jugadores} players per room. No card required.",
+    "comoFunciona": "How a lesson works",
+    "pasos": [
+      "Write a quiz or open a saved one.",
+      "Project the code and the QR. Students join with a nickname.",
+      "Move through the questions. The scoreboard updates live.",
+      "When you finish, check the report and decide what to review."
+    ],
+    "paraCentros": "Built for schools",
+    "paraCentrosTexto": "Students never create an account, so there is no personal data from minors to process. We explain it without fine print in",
+    "verPrecios": "See pricing",
+    "ventajas": [
+      {
+        "titulo": "Students never create an account",
+        "texto": "They join with a room code and a nickname. No emails, no real names, no consent forms to manage. It is the difference a school notices when reviewing privacy."
+      },
+      {
+        "titulo": "Prepare once, reuse forever",
+        "texto": "Save your quizzes and bring them back next year. Five question types, with per-question weighting and images."
+      },
+      {
+        "titulo": "Know what to review tomorrow",
+        "texto": "When the lesson ends you get the report: which questions the class got wrong, worst first, and how each student did."
+      },
+      {
+        "titulo": "Holds a real classroom",
+        "texto": "Tested with 200 players answering at once without losing a single score. If someone reloads the page, they come back where they were."
+      }
+    ]
+  },
+  "acceso": {
+    "titulo": "Sign in to QuestionON",
+    "subtitulo": "We will email you a sign-in link. No passwords to remember.",
+    "correo": "Email address",
+    "enviar": "Send me the link",
+    "enviando": "Sending...",
+    "revisaBandeja": "Check your inbox.",
+    "soloProfesorado": "Only teachers need an account. Students join with a room code and a nickname, without giving any personal data.",
+    "errorEnlaceUsado": "That link is no longer valid. Request a new one.",
+    "errorSinCodigo": "The link did not carry a sign-in code."
+  },
+  "precios": {
+    "titulo": "Pricing",
+    "subtitulo": "Start free and pay only when your classroom outgrows it. Fourteen-day Pro trial, no card required.",
+    "sinCuentaAlumnado": "Students never need an account: they join with a code and a nickname, without giving any personal data.",
+    "probar": "Try 14 days",
+    "porDocente": "per teacher, minimum 5",
+    "jugadoresPorSala": "{n} players per room",
+    "cuestionariosIlimitados": "Unlimited quizzes",
+    "cuestionariosGuardados": "{n} saved quizzes",
+    "tiposPregunta": "{n} question types",
+    "informesSinCaducidad": "Reports kept indefinitely",
+    "informesDias": "Reports from the last {n} days",
+    "exportar": "Export to CSV and Excel",
+    "subirImagenes": "Upload your own images",
+    "branding": "Your logo and colours"
+  },
+  "informes": {
+    "titulo": "Reports",
+    "subtitulo": "Which questions the class got wrong and how each student did.",
+    "sinPartidas": "You have not finished any game yet.",
+    "sinPartidasAyuda": "Reports show up here as soon as a game reaches the end.",
+    "preguntasCostaron": "Hardest questions",
+    "preguntasCostaronAyuda": "Worst first: those are the ones worth reviewing.",
+    "alumnado": "Students",
+    "puesto": "Rank",
+    "nombre": "Name",
+    "aciertos": "Correct",
+    "respondidas": "Answered",
+    "puntos": "Points",
+    "sinRespuestas": "No answers",
+    "porcentajeAcierto": "{n}% correct",
+    "exportarCsv": "Export to CSV",
+    "exportarSoloPago": "Available on",
+    "planesDePago": "the paid plans"
+  }
+}

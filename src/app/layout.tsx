@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { appUrlForMetadata } from "@/lib/appUrl";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { getLocale } from "@/i18n";
 
 export const metadata: Metadata = {
   // metadataBase hace que las URL relativas de openGraph y canonical se
@@ -25,13 +26,17 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // El idioma declarado tiene que ser el real: si no, un lector de pantalla
+  // lee el ingles con fonetica espanola, o al reves.
+  const locale = await getLocale();
+
   return (
-    <html lang="es" className="h-full antialiased">
+    <html lang={locale} className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans">
         {children}
         <SiteFooter />
