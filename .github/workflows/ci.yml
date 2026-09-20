@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancela ejecuciones anteriores de la misma rama: si alguien empuja dos veces
+# seguidas, solo interesa el resultado de la ultima.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Comprobaciones rapidas y sin dependencias: fallan en menos de un minuto.
+  estatico:
+    name: Tipos, estilo y unitarios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Comprobacion de tipos
+        run: npm run typecheck
+      - name: Estilo
+        run: npm run lint
+      - name: Tests unitarios
+        run: npm test
+
+  # Levanta Redis y Postgres de verdad: las suites de integracion comprueban
+  # cosas (atomicidad, autorizacion, webhooks) que un mock no ejercita.
+  integracion:
+    name: Integracion y navegador
+    runs-on: ubuntu-latest
+    needs: estatico
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: questionon
+          POSTGRES_PASSWORD: questionon
+          POSTGRES_DB: questionon
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U questionon -d questionon"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      NODE_ENV: production
+      PORT: 3000
+      APP_URL: http://localhost:3000
+      REDIS_URL: redis://127.0.0.1:6379
+      DATABASE_URL: postgres://questionon:questionon@127.0.0.1:5432/questionon
+      # Secretos ficticios: el CI no cobra ni envia correo, pero las firmas se
+      # verifican de verdad contra este valor.
+      SESSION_SECRET: secreto-de-integracion-continua-no-usar-en-produccion
+      STRIPE_SECRET_KEY: sk_test_ficticia_para_ci
+      STRIPE_WEBHOOK_SECRET: whsec_secreto_de_ci
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Migraciones
+        run: npm run db:migrate
+
+      - name: Build
+        run: npm run build
+
+      - name: Arrancar el servidor
+        run: |
+          node dist/server.js > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://127.0.0.1:3000/api/health && break
+            sleep 2
+          done
+          curl -sf http://127.0.0.1:3000/api/health
+
+      - name: Suites de integracion
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          SERVER_LOG: server.log
+        run: |
+          set -e
+          for suite in authorization auth-flow quiz-flow billing-webhook \
+                       plan-limits game-flow concurrency; do
+            echo "--- $suite ---"
+            node "tests/integration/$suite.mjs"
+          done
+
+      - name: Navegador
+        env:
+          BASE_URL: http://localhost:3000
+          SERVER_LOG: server.log
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
+
+      - name: Log del servidor si algo falla
+        if: failure()
+        run: tail -100 server.log
