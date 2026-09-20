@@ -90,6 +90,10 @@ jobs:
       - name: Arrancar el servidor
         env:
           NODE_ENV: production
+          # assertConfigured() la exige en produccion. No se envia correo en CI:
+          # el unico mailer implementado vuelca al log, pero sin esta variable
+          # el servidor se niega a arrancar y curl falla con exit 7.
+          MAIL_PROVIDER: consola-de-ci
         run: |
           node dist/server.js > server.log 2>&1 &
           for i in $(seq 1 60); do
