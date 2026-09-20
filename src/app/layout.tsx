@@ -1,10 +1,28 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { appUrlForMetadata } from "@/lib/appUrl";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "QuestionON | Trivia familiar estilo Kahoot",
-  description: "Crea partidas en vivo con preguntas de respuesta simple o compuesta.",
+  // metadataBase hace que las URL relativas de openGraph y canonical se
+  // resuelvan bien. Sin ella, Next avisa y las imagenes sociales no cargan.
+  metadataBase: new URL(appUrlForMetadata()),
+  title: {
+    default: "QuestionON · Cuestionarios en vivo para el aula",
+    template: "%s · QuestionON",
+  },
+  description:
+    "Crea cuestionarios y juégalos en directo con tu clase. El alumnado entra con un código, sin crear cuenta ni dar datos personales.",
+  applicationName: "QuestionON",
+  authors: [{ name: "QuestionON" }],
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  // themeColor va en `viewport`, no en `metadata`: en metadata esta deprecado
+  // desde Next 14.
+  themeColor: "#0b1228",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

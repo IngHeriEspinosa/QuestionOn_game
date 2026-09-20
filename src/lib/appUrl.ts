@@ -61,3 +61,20 @@ export function expectedOrigin(headers: Headers, protocolHint?: string): string 
     forwardedProto ?? protocolHint ?? (process.env.NODE_ENV === "production" ? "https" : "http");
   return `${protocol}://${host}`;
 }
+
+/**
+ * URL pública para METADATOS, que nunca lanza.
+ *
+ * `getAppUrl()` lanza en producción a propósito: un enlace de acceso mal
+ * construido es una puerta cerrada. Pero los metadatos (canonical, openGraph)
+ * se evalúan al cargar el módulo del layout, y `next build` corre con
+ * NODE_ENV=production sin APP_URL definida, así que lanzar ahí rompe el build.
+ *
+ * Es seguro ser tolerante aquí porque `assertConfigured()` impide arrancar el
+ * servidor sin APP_URL: en ejecución real el valor siempre está.
+ */
+export function appUrlForMetadata(): string {
+  const configured = process.env.APP_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
+  return `http://localhost:${process.env.PORT ?? 3000}`;
+}

@@ -8,6 +8,7 @@ import Link from "next/link";
  * habitual para no llegar a firmar.
  */
 const ENLACES = [
+  { href: "/inicio", label: "Qué es QuestionON" },
   { href: "/precios", label: "Precios" },
   { href: "/legal/aula", label: "Privacidad en el aula" },
   { href: "/legal/privacidad", label: "Privacidad" },
