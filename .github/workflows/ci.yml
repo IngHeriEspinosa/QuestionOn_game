@@ -60,7 +60,9 @@ jobs:
           --health-retries 10
 
     env:
-      NODE_ENV: production
+      # OJO: NODE_ENV NO se pone aqui. A nivel de job, `npm ci` omitiria las
+      # devDependencies (typescript, drizzle-kit, playwright, esbuild) y el
+      # build fallaria. Se define solo en el paso que arranca el servidor.
       PORT: 3000
       APP_URL: http://localhost:3000
       REDIS_URL: redis://127.0.0.1:6379
@@ -86,6 +88,8 @@ jobs:
         run: npm run build
 
       - name: Arrancar el servidor
+        env:
+          NODE_ENV: production
         run: |
           node dist/server.js > server.log 2>&1 &
           for i in $(seq 1 60); do
@@ -116,4 +120,11 @@ jobs:
 
       - name: Log del servidor si algo falla
         if: failure()
-        run: tail -100 server.log
+        # `|| true`: si el fallo ocurrio ANTES de arrancar el servidor, el
+        # fichero no existe y este paso fallaria tambien, ocultando la causa
+        # real con un error de "no such file".
+        run: |
+          echo "--- ultimas lineas del log del servidor ---"
+          tail -100 server.log || echo "(el servidor no llego a arrancar)"
+          echo "--- contenedores ---"
+          docker ps -a || true
