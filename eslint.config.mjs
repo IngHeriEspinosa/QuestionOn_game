@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Salida de esbuild: codigo generado, no se lintea.
+    "dist/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

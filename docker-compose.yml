@@ -1,0 +1,72 @@
+# La clave `version` es obsoleta en Compose v2 y se omite.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_TLS=false
+      - DATABASE_URL=postgres://questionon:questionon@postgres:5432/questionon
+      # Sin esto los enlaces de acceso apuntarian a la direccion interna.
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET es obligatoria}
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # AOF: sin esto, un reinicio de Redis pierde hasta la última snapshot RDB.
+    # noeviction: con la política por defecto, una partida en curso puede ser
+    # expulsada bajo presión de memoria y desaparecer a mitad de clase.
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy noeviction
+    ports:
+      # Solo loopback: necesario para ejecutar la app fuera de Docker en
+      # desarrollo. Invisible desde fuera de la maquina.
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=questionon
+      # Solo para desarrollo. En produccion va por secreto, no en el compose.
+      - POSTGRES_PASSWORD=questionon
+      - POSTGRES_DB=questionon
+    ports:
+      # Solo loopback, nunca 0.0.0.0: accesible para migraciones y pg_dump
+      # desde la propia maquina, invisible desde fuera del VPS.
+      # El puerto del host es configurable porque 5432 suele estar ocupado por
+      # otro proyecto en maquinas de desarrollo.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U questionon -d questionon"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
+  postgres-data:
