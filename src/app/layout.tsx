@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export const metadata: Metadata = {
   title: "QuestionON | Trivia familiar estilo Kahoot",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--text)] font-sans">
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

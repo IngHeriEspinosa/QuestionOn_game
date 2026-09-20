@@ -1,0 +1,51 @@
+# Proxy inverso delante de QuestionON.
+#
+# Caddy y no nginx por una razon concreta: obtiene y renueva el certificado TLS
+# solo, sin cron ni certbot. En un VPS que administra una sola persona, eso es
+# una fuente menos de caidas a las 3 de la manana.
+#
+# Uso:
+#   caddy run --config ops/Caddyfile
+# o como servicio del sistema, con el dominio real en lugar del de ejemplo.
+
+questionon.example.com {
+	encode zstd gzip
+
+	# El WebSocket del juego. Caddy reenvia el upgrade sin configuracion extra,
+	# pero el timeout de lectura SI importa: por defecto cortaria las conexiones
+	# largas a mitad de clase.
+	reverse_proxy localhost:3000 {
+		# Sin esto, los enlaces de acceso y la comprobacion CSRF verian la
+		# direccion interna en vez del dominio publico.
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For {remote_host}
+		header_up Host {host}
+
+		# Una partida puede estar 20 minutos sin trafico en el socket si el
+		# docente se entretiene explicando. Con el valor por defecto se cortaria.
+		transport http {
+			read_timeout 1h
+			write_timeout 1h
+		}
+	}
+
+	# El streaming de SSE no debe quedarse en el bufer del proxy: si se bufferiza,
+	# el fallback de tiempo real deja de funcionar y no da ningun error visible.
+	@sse path /api/game/*/events
+	reverse_proxy @sse localhost:3000 {
+		flush_interval -1
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For {remote_host}
+	}
+
+	# Limite de tamano: el cuerpo mas grande que acepta la aplicacion es un
+	# cuestionario de 100 preguntas. Un megabyte sobra.
+	request_body {
+		max_size 1MB
+	}
+
+	log {
+		output file /var/log/caddy/questionon.log
+		format json
+	}
+}

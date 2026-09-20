@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createServer } from "http";
 import next from "next";
 import { logger } from "../src/lib/logger";
+import { assertConfigured } from "../src/lib/env";
 import { closeRedis } from "../src/lib/redis";
 import { closeDb } from "../src/server/db";
 import { attachWsGateway } from "./wsGateway";
@@ -27,6 +28,10 @@ const port = Number(process.env.PORT ?? 3000);
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 async function main() {
+  // Antes de nada: si falta configuracion, mejor no arrancar. El servidor
+  // propio no pasa por instrumentation.ts, asi que se comprueba aqui tambien.
+  assertConfigured();
+
   const app = next({ dev });
   await app.prepare();
 
